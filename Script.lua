@@ -1,3 +1,21 @@
+local LPH_JIT = function(f) return f end
+local LPH_NO_VIRTUALIZE = function(f) return function(...) return f(...) end end
+local LPH_NO_UPVALUES = function(f) return function(...) return f(...) end end
+
+if not _G["__LPH_OBFUSCATED__"] then
+    _G["__LPH_OBFUSCATED__"] = true
+    _G["LPH_JIT"] = LPH_JIT
+    _G["LPH_NO_VIRTUALIZE"] = LPH_NO_VIRTUALIZE
+    _G["LPH_NO_UPVALUES"] = LPH_NO_UPVALUES
+end
+
+local function _GET_SERVICE(name)
+    local s, r = pcall(function()
+        return cloneref(game:GetService(name))
+    end)
+    return s and r or nil
+end
+
 local _wait, _spawn = task.wait, task.spawn
 local _floor, _clamp = math.floor, math.clamp
 local _rand = math.random
@@ -7,11 +25,11 @@ local _c3 = Color3.fromRGB
 local _c3hsv = Color3.fromHSV
 local _fmt = string.format
 
-local _RS = game:GetService("RunService")
-local _PL = game:GetService("Players")
-local _WS = game:GetService("Workspace")
-local _UI = game:GetService("UserInputService")
-local _LT = game:GetService("Lighting")
+local _RS = _GET_SERVICE("RunService")
+local _PL = _GET_SERVICE("Players")
+local _WS = _GET_SERVICE("Workspace")
+local _UI = _GET_SERVICE("UserInputService")
+local _LT = _GET_SERVICE("Lighting")
 local _CA = _WS.CurrentCamera
 local _LP = _PL.LocalPlayer
 
@@ -34,96 +52,102 @@ local _PR_C = {
     _c3(255, 50, 50)
 }
 
-local _S1 = {
-    _A = false,
-    _WC = false,
-    _TA = "Head",
-    _FS = 80,
-    _SM = 5,
-    _SC = false,
-    _IB = false,
-    _SF = false,
-    _FC = _c3(255, 255, 255),
-    _FSC = false,
-    _HA = false,
-    _HS = 2,
-    _HT = 0.5,
-    _HWC = false,
-    _HCC = true,
-    _HC = _c3(255, 255, 255),
-    _MD = 1000,
-    _B = nil,
-    _Active = false,
-    _ShowFOV = false,
-    _FOVSize = 80,
-    _Smoothness = 5,
-    _WallCheck = false,
-    _SleeperCheck = false,
-    _IgnoreBots = false,
-    _HitboxActive = false,
-    _HitboxSize = 2,
-    _HitboxColor = _c3(255, 255, 255),
-    _HitboxTransparency = 0.5,
-    _HitboxCanCollide = true,
-    _HitboxWallCheck = false
-}
+local _S1 = LPH_NO_VIRTUALIZE(function()
+    return {
+        _A = false,
+        _WC = false,
+        _TA = "Head",
+        _FS = 80,
+        _SM = 5,
+        _SC = false,
+        _IB = false,
+        _SF = false,
+        _FC = _c3(255, 255, 255),
+        _FSC = false,
+        _HA = false,
+        _HS = 2,
+        _HT = 0.5,
+        _HWC = false,
+        _HCC = true,
+        _HC = _c3(255, 255, 255),
+        _MD = 1000,
+        _B = nil,
+        _Active = false,
+        _ShowFOV = false,
+        _FOVSize = 80,
+        _Smoothness = 5,
+        _WallCheck = false,
+        _SleeperCheck = false,
+        _IgnoreBots = false,
+        _HitboxActive = false,
+        _HitboxSize = 2,
+        _HitboxColor = _c3(255, 255, 255),
+        _HitboxTransparency = 0.5,
+        _HitboxCanCollide = true,
+        _HitboxWallCheck = false
+    }
+end)()
 
-local _S2 = {
-    _PE = false,
-    _BE = false,
-    _BF = false,
-    _IE = false,
-    _CE = false,
-    _SC = false,
-    _HB = false,
-    _SE = false,
-    _NE = false,
-    _OC = false,
-    _MD = 1000,
-    _C = _c3(255, 255, 255),
-    _B = nil,
-    _HB_B = nil,
-    _FBB = nil,
-    _FB = false,
-    _FBI = 0,
-    _FBC = _c3(255, 255, 255),
-    _PlayerESP = false,
-    _BoxESP = false,
-    _BoxFilled = false,
-    _InfoESP = false,
-    _ChamsEnabled = false,
-    _ESPColor = _c3(255, 255, 255),
-    _StoneESP = false,
-    _IronESP = false,
-    _NitrateESP = false,
-    _OreChams = false,
-    _SleeperCheck = false,
-    _HideBots = false,
-    _FullBright = false
-}
+local _S2 = LPH_NO_VIRTUALIZE(function()
+    return {
+        _PE = false,
+        _BE = false,
+        _BF = false,
+        _IE = false,
+        _CE = false,
+        _SC = false,
+        _HB = false,
+        _SE = false,
+        _NE = false,
+        _OC = false,
+        _MD = 1000,
+        _C = _c3(255, 255, 255),
+        _B = nil,
+        _HB_B = nil,
+        _FBB = nil,
+        _FB = false,
+        _FBI = 0,
+        _FBC = _c3(255, 255, 255),
+        _PlayerESP = false,
+        _BoxESP = false,
+        _BoxFilled = false,
+        _InfoESP = false,
+        _ChamsEnabled = false,
+        _ESPColor = _c3(255, 255, 255),
+        _StoneESP = false,
+        _IronESP = false,
+        _NitrateESP = false,
+        _OreChams = false,
+        _SleeperCheck = false,
+        _HideBots = false,
+        _FullBright = false
+    }
+end)()
 
-local _S3 = {
-    _V = false,
-    _M = false,
-    _DS = nil,
-    _L = false,
-    _IB = nil,
-    _AC = _c3(180, 120, 255),
-    _BC = _c3(10, 10, 12),
-    _SC = _c3(15, 15, 18),
-    _SHC = _c3(15, 15, 18),
-    _BrC = _c3(30, 30, 35),
-    _TC = _c3(255, 255, 255),
-    _MC = {left = {}, right = {}, entity = {}},
-    _UIC = {},
-    _Visible = false,
-    _Loaded = false,
-    _Moving = false,
-    _DraggingSlider = false,
-    _IsBinding = nil,
-    _MenuComponents = {left = {}, right = {}, entity = {}},
-    _UIComponents = {}
-}
+local _S3 = LPH_NO_VIRTUALIZE(function()
+    return {
+        _V = false,
+        _M = false,
+        _DS = nil,
+        _L = false,
+        _IB = nil,
+        _AC = _c3(180, 120, 255),
+        _BC = _c3(10, 10, 12),
+        _SC = _c3(15, 15, 18),
+        _SHC = _c3(15, 15, 18),
+        _BrC = _c3(30, 30, 35),
+        _TC = _c3(255, 255, 255),
+        _MC = {left = {}, right = {}, entity = {}},
+        _UIC = {},
+        _Visible = false,
+        _Loaded = false,
+        _Moving = false,
+        _DraggingSlider = false,
+        _IsBinding = nil,
+        _MenuComponents = {left = {}, right = {}, entity = {}},
+        _UIComponents = {}
+    }
+end)()
 
 local _ESTO, _RSTO, _RCHC, _P_CACH, _R_CACH, _CHMC, _NOTIF, _OSZ, _OCOL, _OCC = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
 local _LCKT = nil
@@ -413,7 +437,7 @@ end
 
 _spawn(_U_CACHE)
 
-_spawn(function()
+_spawn(LPH_NO_VIRTUALIZE(function()
     _MF = _CD("Square", { Size = _mD, Color = _S3._BC, Filled = true, Visible = false, ZIndex = 10 })
     _BL = _CD("Square", { Size = _mD, Color = _S3._BrC, Filled = false, Thickness = 1, Visible = false, ZIndex = 11 })
     _HAC = _CD("Square", { Size = _v2(_mD.X, 2), Color = _S3._AC, Filled = true, Visible = false, ZIndex = 15 })
@@ -505,10 +529,10 @@ _spawn(function()
 
     _S3._L = true
     _S3._V = true
-end)
+end))
 
 local _lastTick = tick()
-_RS.RenderStepped:Connect(function()
+_RS.RenderStepped:Connect(LPH_NO_VIRTUALIZE(function()
     if not _S3._L then return end
     local _now = tick()
     local _dt = _now - _lastTick
@@ -641,8 +665,8 @@ _RS.RenderStepped:Connect(function()
                             _ESTO[p] = {
                                 Box = _CD("Square", {Thickness = 1, Filled = false, ZIndex = 2}),
                                 Fill = _CD("Square", {Thickness = 0, Filled = true, Transparency = 0.3, ZIndex = 1}),
-                                Tag = _CD("Text", {Size = 13, Center = true, Font = 2, Outline = false, ZIndex = 3}), -- УБРАНА ОБВОДКА
-                                Dist = _CD("Text", {Size = 13, Center = true, Font = 2, Outline = false, ZIndex = 3}) -- УБРАНА ОБВОДКА
+                                Tag = _CD("Text", {Size = 13, Center = true, Font = 2, Outline = false, ZIndex = 3}),
+                                Dist = _CD("Text", {Size = 13, Center = true, Font = 2, Outline = false, ZIndex = 3})
                             }
                         end
                         local esp = _ESTO[p]
@@ -747,9 +771,9 @@ _RS.RenderStepped:Connect(function()
         end
         if target then _mmr((target.X - mPos.X) / _S1._SM, (target.Y - mPos.Y) / _S1._SM) end
     else _LCKT = nil end
-end)
+end))
 
-_UI.InputBegan:Connect(function(input, processed)
+_UI.InputBegan:Connect(LPH_NO_VIRTUALIZE(function(input, processed)
     if input.KeyCode == Enum.KeyCode.RightShift then _S3._V = not _S3._V return end
     if not processed then
         if input.KeyCode == _S1._B then _S1._A = not _S1._A _NOT("AIMBOT", _S1._A and "ENABLED" or "DISABLED")
@@ -781,6 +805,6 @@ _UI.InputBegan:Connect(function(input, processed)
             end
         end
     end
-end)
+end))
 
-_UI.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then _S3._M = false _S3._DS = nil end end)
+_UI.InputEnded:Connect(LPH_NO_VIRTUALIZE(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then _S3._M = false _S3._DS = nil end end))
