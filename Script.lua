@@ -1,194 +1,101 @@
-local LPH_JIT = function(f) return f end
-local LPH_NO_VIRTUALIZE = function(f) return function(...) return f(...) end end
-local LPH_NO_UPVALUES = function(f) return function(...) return f(...) end end
-
-if not _G["__LPH_OBFUSCATED__"] then
-    _G["__LPH_OBFUSCATED__"] = true
-    _G["LPH_JIT"] = LPH_JIT
-    _G["LPH_NO_VIRTUALIZE"] = LPH_NO_VIRTUALIZE
-    _G["LPH_NO_UPVALUES"] = LPH_NO_UPVALUES
-end
-
-local function _GET_SERVICE(name)
-    local s, r = pcall(function()
-        return cloneref(game:GetService(name))
-    end)
-    return s and r or nil
-end
-
-local _wait, _spawn = task.wait, task.spawn
-local _floor, _clamp = math.floor, math.clamp
-local _rand = math.random
-local _ins, _rem = table.insert, table.remove
-local _v2, _v3 = Vector2.new, Vector3.new
-local _c3 = Color3.fromRGB
-local _c3hsv = Color3.fromHSV
-local _fmt = string.format
-
-local _RS = _GET_SERVICE("RunService")
-local _PL = _GET_SERVICE("Players")
-local _WS = _GET_SERVICE("Workspace")
-local _UI = _GET_SERVICE("UserInputService")
-local _LT = _GET_SERVICE("Lighting")
-local _CA = _WS.CurrentCamera
-local _LP = _PL.LocalPlayer
-
-local _mmr = mousemoverel
-local _rcst = _WS.Raycast
-local _drw = Drawing.new
-
-local _OLT = {
-    A = _LT.Ambient,
-    OA = _LT.OutdoorAmbient,
-    B = _LT.Brightness,
-    CT = _LT.ClockTime
-}
-
-local _S1 = LPH_NO_VIRTUALIZE(function()
-    return {
-        _A = false,
-        _WC = false,
-        _TA = "Head",
-        _FS = 80,
-        _SM = 5,
-        _SC = false,
-        _IB = false,
-        _SF = false,
-        _FC = _c3(255, 255, 255),
-        _FSC = false,
-        _FSC1 = _c3(255, 0, 0),
-        _FSC2 = _c3(0, 255, 0),
-        _HA = false,
-        _HS = 2,
-        _HT = 0.5,
-        _HWC = false,
-        _HCC = true,
-        _HC = _c3(255, 255, 255),
-        _MD = 1000,
-        _B = nil,
-        _Active = false,
-        _ShowFOV = false,
-        _FOVSize = 80,
-        _Smoothness = 5,
-        _WallCheck = false,
-        _SleeperCheck = false,
-        _IgnoreBots = false,
-        _HitboxActive = false,
-        _HitboxSize = 2,
-        _HitboxColor = _c3(255, 255, 255),
-        _HitboxTransparency = 0.5,
-        _HitboxCanCollide = true,
-        _HitboxWallCheck = false
-    }
-end)()
-
-local _S2 = LPH_NO_VIRTUALIZE(function()
-    return {
-        _PE = false,
-        _BE = false,
-        _BF = false,
-        _IE = false,
-        _CE = false,
-        _SC = false,
-        _HB = false,
-        _SE = false,
-        _NE = false,
-        _OC = false,
-        _MD = 1000,
-        _C = _c3(255, 255, 255),
-        _B = nil,
-        _HB_B = nil,
-        _FBB = nil,
-        _FB = false,
-        _FBI = 0,
-        _FBC = _c3(255, 255, 255),
-        _PlayerESP = false,
-        _BoxESP = false,
-        _BoxFilled = false,
-        _InfoESP = false,
-        _ChamsEnabled = false,
-        _ESPColor = _c3(255, 255, 255),
-        _StoneESP = false,
-        _IronESP = false,
-        _NitrateESP = false,
-        _OreChams = false,
-        _SleeperCheck = false,
-        _HideBots = false,
-        _FullBright = false
-    }
-end)()
-
-local _S3 = LPH_NO_VIRTUALIZE(function()
-    return {
-        _V = false,
-        _M = false,
-        _DS = nil,
-        _L = false,
-        _IB = nil,
-        _AC = _c3(180, 120, 255),
-        _BC = _c3(10, 10, 12),
-        _SC = _c3(15, 15, 18),
-        _SHC = _c3(15, 15, 18),
-        _BrC = _c3(30, 30, 35),
-        _TC = _c3(255, 255, 255),
-        _MC = {left = {}, right = {}, entity = {}},
-        _UIC = {},
-        _Visible = false,
-        _Loaded = false,
-        _Moving = false,
-        _DraggingSlider = false,
-        _IsBinding = nil,
-        _MenuComponents = {left = {}, right = {}, entity = {}},
-        _UIComponents = {}
-    }
-end)()
-
-local _ESTO, _RSTO, _RCHC, _P_CACH, _R_CACH, _CHMC, _NOTIF, _OSZ, _OCOL, _OCC = {}, {}, {}, {}, {}, {}, {}, {}, {}, {}
-local _LCKT = nil
-local _mP = _v2(200, 200)
-local _mD = _v2(760, 580)
-local _dSO = _v2(0, 0)
-
-local _RCP = RaycastParams.new()
-_RCP.FilterType = Enum.RaycastFilterType.Exclude
-
-local function _CD(t, p)
-    local o = _drw(t)
-    for k, v in pairs(p) do 
-        pcall(function() o[k] = v end) 
-    end
-    _ins(_S3._UIC, o)
-    return o
-end
-
-local function _UFB()
-    if _S2._FB then
-        local iS = _S2._FBI / 50
-        local baseCol = _S2._FBC
-        local r = _clamp(baseCol.R * 255 + (iS * 155), 0, 255)
-        local g = _clamp(baseCol.G * 255 + (iS * 155), 0, 255)
-        local b = _clamp(baseCol.B * 255 + (iS * 155), 0, 255)
-        local bV = 1 + (iS * 4)
-        
-        _LT.Ambient = _c3(r, g, b)
-        _LT.OutdoorAmbient = _c3(r, g, b)
-        _LT.Brightness = bV
-        _LT.ClockTime = 14
-    end
-end
-
-local _FOV_CIRCLE = _CD("Circle", {Thickness = 1, NumSides = 64, Radius = 80, Visible = false, ZIndex = 999})
-
-local function _f1(v53) 
-    local l_Torso_0 = v53:FindFirstChild("Torso");
-    if l_Torso_0 and l_Torso_0:FindFirstChild("LeftBooster") then
-        return false;
-    else
-        return true;
+local type_custom = typeof
+if not LPH_OBFUSCATED then
+    LPH_JIT = function(...)
+        return ...;
     end;
+    LPH_JIT_MAX = function(...)
+        return ...;
+    end;
+    LPH_NO_VIRTUALIZE = function(...)
+        return ...;
+    end;
+    LPH_NO_UPVALUES = function(f)
+        return (function(...)
+            return f(...);
+        end);
+    end;
+    LPH_ENCSTR = function(...)
+        return ...;
+    end;
+    LPH_ENCNUM = function(...)
+        return ...;
+    end;
+    LPH_ENCFUNC = function(func, key1, key2)
+        if key1 ~= key2 then return print("LPH_ENCFUNC mismatch") end
+        return func
+    end
+    LPH_CRASH = function()
+        return print(debug.traceback());
+    end;
+    SWG_DiscordUser = "swim"
+    SWG_DiscordID = 1337
+    SWG_Private = true
+    SWG_Dev = false
+    SWG_Version = "free"
+    SWG_Title = 'free swimhub.xyz %s - %s | discord.gg/priv9'
+    SWG_ShortName = 'free'
+    SWG_FullName = 'ts'
+    SWG_FFA = false
 end;
 
-local function _f2(model)
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/Splix"))()
+
+local window = library:new({
+    textsize = 13.5,
+    font = Enum.Font.RobotoMono,
+    name = "SILVER PRIVATE - REWORK",
+    color = Color3.fromRGB(138, 43, 226)
+})
+
+local combatTab = window:page({name = "combat"})
+local visualsTab = window:page({name = "visuals"})
+
+local hitboxSection = combatTab:section({
+    name = "hitbox expander",
+    side = "left", 
+    size = 250
+})
+
+local espSection = visualsTab:section({
+    name = "player esp",
+    side = "left", 
+    size = 250
+})
+
+local objectSection = visualsTab:section({
+    name = "object esp", 
+    side = "right", 
+    size = 250
+})
+
+local lightingSection = visualsTab:section({
+    name = "lighting",
+    side = "right", 
+    size = 250
+})
+
+local workspace = cloneref(game:GetService("Workspace"))
+local RunService = cloneref(game:GetService("RunService"))
+local Players = cloneref(game:GetService("Players"))
+local Camera = workspace.CurrentCamera
+local LocalPlayer = Players.LocalPlayer
+local UserInputService = cloneref(game:GetService("UserInputService"))
+
+local validcharacters = {}
+local hbc, original_size, hbsize = nil, Vector3.new(0.5, 1, 0.5), Vector3.new(5, 5, 5)
+local hitboxheadtransparency, cancollide = 0.5, false
+local hitboxheadsizex, hitboxheadsizey = 5, 5
+local hitboxcolor = Color3.new(1, 0, 0)
+local hitboxSleeperCheck = false
+local hitboxBotCheck = false
+
+local _Vector3new = Vector3.new
+local _FindFirstChild = game.FindFirstChild
+local _FindFirstChildOfClass = game.FindFirstChildOfClass
+local _WorldToViewportPoint = Camera.WorldToViewportPoint
+local _IsA = game.IsA
+
+local function isSleeper(model)
     local lt = model:FindFirstChild("LowerTorso")
     if lt then
         local rj = lt:FindFirstChild("RootRig")
@@ -197,714 +104,690 @@ local function _f2(model)
     return false
 end
 
-local function _f3(part)
-    if not part then return false end
-    _RCP.FilterDescendantsInstances = {_LP.Character, part.Parent, _CA}
-    local origin = _CA.CFrame.Position
-    local direction = (part.Position - origin)
-    local ray = _WS:Raycast(origin, direction, _RCP)
-    return ray == nil
-end
-
-local function _GAP(model)
-    if not model then return nil end
-    if _S1._TA == "Head" then 
-        return model:FindFirstChild("Head")
-    else 
-        local b = model:FindFirstChild("UpperTorso") or model:FindFirstChild("Chest") or model:FindFirstChild("Torso") or model:FindFirstChild("HumanoidRootPart")
-        return b
+local function isBot(model)
+    local torso = model:FindFirstChild("Torso")
+    if torso and torso:FindFirstChild("LeftBooster") then
+        return false
+    else
+        return true
     end
 end
 
-local function _REESP(obj)
-    if _ESTO[obj] then
-        pcall(function() 
-            _ESTO[obj].Box.Visible = false
-            _ESTO[obj].Fill.Visible = false
-            _ESTO[obj].Tag.Visible = false
-            _ESTO[obj].Dist.Visible = false
-            _ESTO[obj].Box:Remove() 
-            _ESTO[obj].Fill:Remove() 
-            _ESTO[obj].Tag:Remove()
-            _ESTO[obj].Dist:Remove() 
-        end)
-        _ESTO[obj] = nil
-    end
+local function addtovc(obj)
+    if not obj then return end
+    if not obj:FindFirstChild("Head") and not obj:FindFirstChild("LowerTorso") then return end
+    validcharacters[obj] = obj
 end
 
-local function _RERESP(part)
-    if _RSTO[part] then
-        pcall(function() 
-            _RSTO[part].Visible = false
-            _RSTO[part]:Remove() 
-        end)
-        _RSTO[part] = nil
-    end
-    if _RCHC[part] then
-        pcall(function() 
-            _RCHC[part].Enabled = false
-            _RCHC[part]:Destroy() 
-        end)
-        _RCHC[part] = nil
-    end
+local function removefromvc(obj)
+    if not validcharacters[obj] then return end
+    validcharacters[obj] = nil
 end
 
-local function _U_CACHE()
-    local function add(obj)
-        pcall(function()
-            if obj:IsA("Model") then
-                local root = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("LowerTorso")
-                if root and obj.Name ~= _LP.Name then _ins(_P_CACH, obj) end
-                
-                local mesh = obj:FindFirstChildOfClass("MeshPart")
-                if mesh and (mesh.MeshId == "rbxassetid://12939036056" or mesh.MeshId == "rbxassetid://13425026915") then
-                    local isFound = false
-                    local o_children = obj:GetChildren()
-                    for j = 1, #o_children do
-                        local child = o_children[j]
-                        if child:IsA("BasePart") then
-                            if child.Color == _c3(248, 248, 248) then
-                                _ins(_R_CACH, {model = obj, part = child, type = "Nitrate", color = _c3(255, 255, 255)})
-                                isFound = true break
-                            elseif child.Color == _c3(199, 172, 120) or child.Color == _c3(255, 170, 80) then
-                                _ins(_R_CACH, {model = obj, part = child, type = "Iron", color = _c3(255, 170, 80)})
-                                isFound = true break
+for i, v in next, workspace:GetChildren() do 
+    addtovc(v) 
+end
+
+workspace.ChildAdded:Connect(LPH_NO_VIRTUALIZE(function(obj)
+    addtovc(obj)
+end))
+
+workspace.ChildRemoved:Connect(LPH_NO_VIRTUALIZE(function(obj)
+    removefromvc(obj)
+end))
+
+local hitboxToggle = hitboxSection:toggle({
+    name = "enabled", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        if value then
+            hbc = LPH_NO_VIRTUALIZE(function()
+                return RunService.Heartbeat:Connect(LPH_JIT_MAX(function(delta)
+                    local trans = hitboxheadtransparency
+                    for i, v in pairs(validcharacters) do
+                        local primpart = v and _FindFirstChild(v, 'Head')
+                        if primpart then
+                            local sleeper = isSleeper(v)
+                            local bot = isBot(v)
+                            
+                            local shouldSkip = (hitboxSleeperCheck and sleeper) or (hitboxBotCheck and bot)
+                            
+                            if not shouldSkip then
+                                primpart.Size = hbsize
+                                primpart.Transparency = trans
+                                primpart.CanCollide = cancollide
+                                primpart.Color = hitboxcolor
+                            else
+                                primpart.Size = original_size
+                                primpart.Transparency = 0
+                                primpart.CanCollide = true
+                                primpart.Color = Color3.new(1, 1, 1)
                             end
                         end
                     end
-                    if not isFound then _ins(_R_CACH, {model = obj, part = mesh, type = "Stone", color = _c3(200, 200, 200)}) end
+                end))
+            end)()
+        else
+            if hbc then 
+                hbc:Disconnect() 
+                hbc = nil
+            end
+            
+            for i, v in pairs(validcharacters) do
+                local primpart = v and _FindFirstChild(v, 'Head')
+                if primpart then
+                    primpart.Size = original_size
+                    primpart.Transparency = 0
+                    primpart.CanCollide = true
+                    primpart.Color = Color3.new(1, 1, 1)
                 end
             end
-        end)
-    end
-
-    _WS.ChildAdded:Connect(add)
-    _WS.ChildRemoved:Connect(function(obj)
-        for i = #_P_CACH, 1, -1 do if _P_CACH[i] == obj then _rem(_P_CACH, i) end end
-        for i = #_R_CACH, 1, -1 do 
-            if _R_CACH[i].model == obj or _R_CACH[i].part == obj then 
-                _RERESP(_R_CACH[i].part)
-                _rem(_R_CACH, i) 
-            end 
         end
-        if _ESTO[obj] then _REESP(obj) end
     end)
-    
-    local all = _WS:GetChildren()
-    for i = 1, #all do add(all[i]) end
-end
-
-_spawn(_U_CACHE)
-
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/Splix"))()
-
-local window = library:new({
-    textsize = 13.5,
-    font = Enum.Font.RobotoMono,
-    name = "SILVER PRIVATE",
-    color = Color3.fromRGB(180, 120, 255)
 })
 
-local combatTab = window:page({name = "COMBAT"})
-local visualsTab = window:page({name = "VISUALS"})
-local entityTab = window:page({name = "ENTITY"})
-
-local combatMainSection = combatTab:section({name = "Aimbot Settings", side = "left", size = 250})
-local combatFovSection = combatTab:section({name = "FOV Settings", side = "left", size = 250})
-local combatHitboxSection = combatTab:section({name = "Hitbox", side = "right", size = 250})
-
-local visualsPlayerSection = visualsTab:section({name = "Player ESP", side = "left", size = 250})
-local visualsLightingSection = visualsTab:section({name = "Lighting", side = "right", size = 250})
-
-local entityOreSection = entityTab:section({name = "Ore ESP", side = "left", size = 250})
-
-local aimbotToggle, showFovToggle, fovScannerToggle, ignoreSleepersToggle, ignoreBotsToggle, wallCheckToggle
-local fovSizeSlider, smoothnessSlider
-local hitboxToggle, canCollideToggle, hitboxWallCheckToggle, hitboxSizeSlider, hitboxTransparencySlider
-local playerEspToggle, boxEspToggle, boxFilledToggle, infoEspToggle, chamsEspToggle, hideSleepersToggle, hideBotsToggle
-local fullbrightToggle, brightnessSlider
-local stoneEspToggle, ironEspToggle, nitrateEspToggle, oreChamsToggle
-
-local targetAreaButtonRef
-
-aimbotToggle = combatMainSection:toggle({
-    name = "Aimbot Master", 
-    def = false,
-    callback = function(value) 
-        _S1._A = value
-    end
-})
-
-combatMainSection:keybind({
-    name = "Aimbot Keybind",
+local hitboxBindKey = nil
+local hitboxBindElement = hitboxSection:keybind({
+    name = "hitbox bind",
     def = nil,
-    callback = function(key)
-        _S1._B = key
-    end
-})
-
-combatMainSection:colorpicker({
-    name = "FOV Color",
-    cpname = nil,
-    def = Color3.fromRGB(255, 255, 255),
-    callback = function(value)
-        _S1._FC = value
-    end
-})
-
-ignoreSleepersToggle = combatMainSection:toggle({
-    name = "Ignore Sleepers", 
-    def = false,
-    callback = function(value) 
-        _S1._SC = value 
-    end
-})
-
-ignoreBotsToggle = combatMainSection:toggle({
-    name = "Ignore Bots", 
-    def = false,
-    callback = function(value) 
-        _S1._IB = value 
-    end
-})
-
-wallCheckToggle = combatMainSection:toggle({
-    name = "Wall Check", 
-    def = false,
-    callback = function(value) 
-        _S1._WC = value 
-    end
-})
-
-showFovToggle = combatMainSection:toggle({
-    name = "Show FOV", 
-    def = false,
-    callback = function(value) 
-        _S1._SF = value 
-    end
-})
-
-fovScannerToggle = combatMainSection:toggle({
-    name = "FOV Scanner", 
-    def = false,
-    callback = function(value) 
-        _S1._FSC = value 
-    end
-})
-
-targetAreaButtonRef = combatMainSection:button({
-    name = "Target Area: Head",
-    callback = function()
-        if _S1._TA == "Head" then
-            _S1._TA = "Body"
-            targetAreaButtonRef:rename("Target Area: Torso")
-        else
-            _S1._TA = "Head"
-            targetAreaButtonRef:rename("Target Area: Head")
+    callback = LPH_NO_VIRTUALIZE(function(key)
+        hitboxBindKey = key
+        if key then
+            hitboxToggle:set(not hitboxToggle:get())
         end
-    end
+    end)
 })
 
-hitboxToggle = combatHitboxSection:toggle({
-    name = "Hitbox Expander", 
-    def = false,
-    callback = function(value) 
-        _S1._HA = value 
-    end
-})
-
-combatHitboxSection:keybind({
-    name = "Hitbox Keybind",
-    def = nil,
-    callback = function(key)
-        _S2._HB_B = key
-    end
-})
-
-combatHitboxSection:colorpicker({
-    name = "Hitbox Color",
-    cpname = nil,
-    def = Color3.fromRGB(255, 255, 255),
-    callback = function(value)
-        _S1._HC = value
-    end
-})
-
-canCollideToggle = combatHitboxSection:toggle({
-    name = "CanCollide Hitbox", 
-    def = true,
-    callback = function(value) 
-        _S1._HCC = value 
-    end
-})
-
-hitboxWallCheckToggle = combatHitboxSection:toggle({
-    name = "Hitbox Wallcheck", 
-    def = false,
-    callback = function(value) 
-        _S1._HWC = value 
-    end
-})
-
-hitboxSizeSlider = combatHitboxSection:slider({
-    name = "Hitbox Size",
-    def = 2,
-    max = 4,
-    min = 1,
-    rounding = true,
-    ticking = false,
-    measuring = "",
-    callback = function(value)
-        _S1._HS = value
-    end
-})
-
-hitboxTransparencySlider = combatHitboxSection:slider({
-    name = "Hitbox Transparency",
-    def = 5,
-    max = 10,
-    min = 0,
-    rounding = true,
-    ticking = false,
-    measuring = "",
-    callback = function(value)
-        _S1._HT = value/10
-    end
-})
-
-fovSizeSlider = combatFovSection:slider({
-    name = "FOV Size",
-    def = 80,
-    max = 200,
-    min = 20,
-    rounding = true,
-    ticking = false,
-    measuring = "",
-    callback = function(value)
-        _S1._FS = value
-    end
-})
-
-smoothnessSlider = combatFovSection:slider({
-    name = "Smoothness",
-    def = 5,
-    max = 20,
-    min = 1,
-    rounding = true,
-    ticking = false,
-    measuring = "",
-    callback = function(value)
-        _S1._SM = value
-    end
-})
-
-combatFovSection:colorpicker({
-    name = "FOV SCANER COLOR 1",
+hitboxSection:colorpicker({
+    name = "hitbox color",
     cpname = nil,
     def = Color3.fromRGB(255, 0, 0),
-    callback = function(value)
-        _S1._FSC1 = value
-    end
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        hitboxcolor = value
+    end)
 })
 
-combatFovSection:colorpicker({
-    name = "FOV SCANER COLOR 2",
-    cpname = nil,
-    def = Color3.fromRGB(0, 255, 0),
-    callback = function(value)
-        _S1._FSC2 = value
-    end
+hitboxSection:toggle({
+    name = "can collide", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        cancollide = value
+    end)
 })
 
-playerEspToggle = visualsPlayerSection:toggle({
-    name = "Player ESP", 
-    def = false,
-    callback = function(value) 
-        _S2._PE = value 
-    end
+hitboxSection:toggle({
+    name = "sleeper check", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        hitboxSleeperCheck = value
+    end)
 })
 
-visualsPlayerSection:keybind({
-    name = "ESP Keybind",
+hitboxSection:toggle({
+    name = "bot check", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        hitboxBotCheck = value
+    end)
+})
+
+hitboxSection:slider({
+    name = "transparency", 
+    def = 5, 
+    max = 10, 
+    min = 1, 
+    rounding = 1, 
+    ticking = false, 
+    measuring = "", 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        hitboxheadtransparency = value / 10
+    end)
+})
+
+hitboxSection:slider({
+    name = "size x", 
+    def = 5, 
+    max = 5, 
+    min = 1, 
+    rounding = 1, 
+    ticking = false, 
+    measuring = "", 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        hitboxheadsizex = value
+        hbsize = _Vector3new(hitboxheadsizex, hitboxheadsizey, hitboxheadsizex)
+    end)
+})
+
+hitboxSection:slider({
+    name = "size y", 
+    def = 5, 
+    max = 5, 
+    min = 1, 
+    rounding = 1, 
+    ticking = false, 
+    measuring = "", 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        hitboxheadsizey = value
+        hbsize = _Vector3new(hitboxheadsizex, hitboxheadsizey, hitboxheadsizex)
+    end)
+})
+
+local ESP_DATA = {
+    playerEnabled = false,
+    boxEnabled = false,
+    boxFilled = false,
+    infoEnabled = false,
+    chamsEnabled = false,
+    hideSleepers = false,
+    hideBots = false,
+    maxDistance = 1000,
+    espColor = Color3.fromRGB(255, 255, 255),
+    
+    stoneEnabled = false,
+    ironEnabled = false,
+    nitrateEnabled = false,
+    oreChams = false,
+    
+    fullbright = false,
+    fullbrightIntensity = 0,
+    fullbrightColor = Color3.fromRGB(255, 255, 255)
+}
+
+local originalLighting = {
+    Ambient = game:GetService("Lighting").Ambient,
+    OutdoorAmbient = game:GetService("Lighting").OutdoorAmbient,
+    Brightness = game:GetService("Lighting").Brightness,
+    ClockTime = game:GetService("Lighting").ClockTime
+}
+
+local function updateFullbright()
+    if ESP_DATA.fullbright then
+        local intensity = ESP_DATA.fullbrightIntensity / 50
+        local baseCol = ESP_DATA.fullbrightColor
+        local r = math.clamp(baseCol.R * 255 + (intensity * 155), 0, 255)
+        local g = math.clamp(baseCol.G * 255 + (intensity * 155), 0, 255)
+        local b = math.clamp(baseCol.B * 255 + (intensity * 155), 0, 255)
+        local brightness = 1 + (intensity * 4)
+        
+        game:GetService("Lighting").Ambient = Color3.fromRGB(r, g, b)
+        game:GetService("Lighting").OutdoorAmbient = Color3.fromRGB(r, g, b)
+        game:GetService("Lighting").Brightness = brightness
+        game:GetService("Lighting").ClockTime = 14
+    end
+end
+
+local playerEspToggle = espSection:toggle({
+    name = "player esp", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        ESP_DATA.playerEnabled = value
+    end)
+})
+
+local espBindKey = nil
+local espBindElement = espSection:keybind({
+    name = "esp bind",
     def = nil,
-    callback = function(key)
-        _S2._B = key
-    end
+    callback = LPH_NO_VIRTUALIZE(function(key)
+        espBindKey = key
+        if key then
+            playerEspToggle:set(not playerEspToggle:get())
+        end
+    end)
 })
 
-visualsPlayerSection:colorpicker({
-    name = "ESP Color",
+espSection:colorpicker({
+    name = "esp color",
     cpname = nil,
     def = Color3.fromRGB(255, 255, 255),
-    callback = function(value)
-        _S2._C = value
-    end
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        ESP_DATA.espColor = value
+    end)
 })
 
-boxEspToggle = visualsPlayerSection:toggle({
-    name = "Box ESP", 
-    def = false,
-    callback = function(value) 
-        _S2._BE = value 
-    end
+espSection:toggle({
+    name = "box esp", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        ESP_DATA.boxEnabled = value
+    end)
 })
 
-boxFilledToggle = visualsPlayerSection:toggle({
-    name = "Box Filled", 
-    def = false,
-    callback = function(value) 
-        _S2._BF = value 
-    end
+espSection:toggle({
+    name = "box filled", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        ESP_DATA.boxFilled = value
+    end)
 })
 
-infoEspToggle = visualsPlayerSection:toggle({
-    name = "Info ESP", 
-    def = false,
-    callback = function(value) 
-        _S2._IE = value 
-    end
+espSection:toggle({
+    name = "info esp", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        ESP_DATA.infoEnabled = value
+    end)
 })
 
-chamsEspToggle = visualsPlayerSection:toggle({
-    name = "Chams ESP", 
-    def = false,
-    callback = function(value) 
-        _S2._CE = value 
-    end
+espSection:toggle({
+    name = "chams esp", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        ESP_DATA.chamsEnabled = value
+    end)
 })
 
-hideSleepersToggle = visualsPlayerSection:toggle({
-    name = "Hide Sleepers", 
-    def = false,
-    callback = function(value) 
-        _S2._SE = value 
-    end
+espSection:toggle({
+    name = "hide sleepers", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        ESP_DATA.hideSleepers = value
+    end)
 })
 
-hideBotsToggle = visualsPlayerSection:toggle({
-    name = "Hide Bots", 
-    def = false,
-    callback = function(value) 
-        _S2._NE = value 
-    end
+espSection:toggle({
+    name = "hide bots", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        ESP_DATA.hideBots = value
+    end)
 })
 
-fullbrightToggle = visualsLightingSection:toggle({
-    name = "FullBright", 
-    def = false,
-    callback = function(value) 
-        _S2._FB = value 
+objectSection:toggle({
+    name = "stone esp", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        ESP_DATA.stoneEnabled = value
+    end)
+})
+
+objectSection:toggle({
+    name = "iron esp", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        ESP_DATA.ironEnabled = value
+    end)
+})
+
+objectSection:toggle({
+    name = "nitrate esp", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        ESP_DATA.nitrateEnabled = value
+    end)
+})
+
+objectSection:toggle({
+    name = "ore chams", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        ESP_DATA.oreChams = value
+    end)
+})
+
+local fullbrightToggle = lightingSection:toggle({
+    name = "fullbright", 
+    def = false, 
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        ESP_DATA.fullbright = value
         if not value then 
-            _LT.Ambient = _OLT.A 
-            _LT.OutdoorAmbient = _OLT.OA 
-            _LT.Brightness = _OLT.B 
+            game:GetService("Lighting").Ambient = originalLighting.Ambient
+            game:GetService("Lighting").OutdoorAmbient = originalLighting.OutdoorAmbient
+            game:GetService("Lighting").Brightness = originalLighting.Brightness
+            game:GetService("Lighting").ClockTime = originalLighting.ClockTime
         end 
-    end
+    end)
 })
 
-visualsLightingSection:keybind({
-    name = "Fullbright Keybind",
+local fullbrightBindKey = nil
+local fullbrightBindElement = lightingSection:keybind({
+    name = "fullbright bind",
     def = nil,
-    callback = function(key)
-        _S2._FBB = key
-    end
+    callback = LPH_NO_VIRTUALIZE(function(key)
+        fullbrightBindKey = key
+        if key then
+            fullbrightToggle:set(not fullbrightToggle:get())
+        end
+    end)
 })
 
-visualsLightingSection:colorpicker({
-    name = "Fullbright Color",
+lightingSection:colorpicker({
+    name = "fullbright color",
     cpname = nil,
     def = Color3.fromRGB(255, 255, 255),
-    callback = function(value)
-        _S2._FBC = value
-    end
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        ESP_DATA.fullbrightColor = value
+    end)
 })
 
-brightnessSlider = visualsLightingSection:slider({
-    name = "Brightness Intensity",
+lightingSection:slider({
+    name = "brightness intensity",
     def = 0,
     max = 50,
     min = 0,
     rounding = true,
     ticking = false,
     measuring = "",
-    callback = function(value)
-        _S2._FBI = value
-    end
+    callback = LPH_NO_VIRTUALIZE(function(value)
+        ESP_DATA.fullbrightIntensity = value
+    end)
 })
 
-stoneEspToggle = entityOreSection:toggle({
-    name = "Stone ESP", 
-    def = false,
-    callback = function(value) 
-        _S2._StoneESP = value 
-    end
-})
-
-ironEspToggle = entityOreSection:toggle({
-    name = "Iron ESP", 
-    def = false,
-    callback = function(value) 
-        _S2._IronESP = value 
-    end
-})
-
-nitrateEspToggle = entityOreSection:toggle({
-    name = "Nitrate ESP", 
-    def = false,
-    callback = function(value) 
-        _S2._NitrateESP = value 
-    end
-})
-
-oreChamsToggle = entityOreSection:toggle({
-    name = "Ore Chams", 
-    def = false,
-    callback = function(value) 
-        _S2._OC = value 
-    end
-})
-
-_S3._V = false
-_S3._L = true
-
-local _lastTick = tick()
-_RS.RenderStepped:Connect(LPH_NO_VIRTUALIZE(function()
-    if not _S3._L then return end
-    local _now = tick()
-    local _dt = _now - _lastTick
-    _lastTick = _now
-
-    _UFB()
-    
-    local mPos = _UI:GetMouseLocation()
-    local cPos = _CA.CFrame.Position
-    
-    _FOV_CIRCLE.Position = mPos
-    _FOV_CIRCLE.Radius = _S1._FS
-    _FOV_CIRCLE.Visible = _S1._A and _S1._SF
-
-    if _S1._A and _S1._FSC then
-        local st = nil
-        local mD = math.huge
-        for i = 1, #_P_CACH do
-            local p = _P_CACH[i]
-            local root = p:FindFirstChild("HumanoidRootPart") or p:FindFirstChild("LowerTorso")
-            if root and (cPos - root.Position).Magnitude <= 1000 then
-                if not (_S1._SC and _f2(p)) and not (_S1._IB and _f1(p)) then
-                    local part = _GAP(p)
-                    if part then
-                        local sPos, onS = _CA:WorldToViewportPoint(part.Position)
-                        if onS then
-                            local screenPos = _v2(sPos.X, sPos.Y)
-                            local mg = (screenPos - mPos).Magnitude
-                            if mg < _S1._FS and mg < mD then 
-                                mD = mg 
-                                st = part 
-                            end
-                        end
-                    end
-                end
-            end
-        end
-        
-        if st then
-            if _f3(st) then
-                _FOV_CIRCLE.Color = _S1._FSC2
-            else
-                _FOV_CIRCLE.Color = _S1._FSC1
-            end
-        else
-            _FOV_CIRCLE.Color = _S1._FSC1
-        end
-    elseif _S1._A and _S1._SF then
-        _FOV_CIRCLE.Color = _S1._FC
-    end
-
-    if _S2._PE then
-        for i = 1, #_P_CACH do
-            local p = _P_CACH[i]
-            local root = p:FindFirstChild("LowerTorso") or p:FindFirstChild("HumanoidRootPart")
-            if root then
-                local sleeper, bot = _f2(p), _f1(p)
-                local dist = (cPos - root.Position).Magnitude
-                if dist <= 1000 and not ((_S2._SE and sleeper) or (_S2._NE and bot)) then
-                    if _S2._CE then
-                        if not _CHMC[p] or _CHMC[p].Parent ~= p then
-                            if _CHMC[p] then _CHMC[p]:Destroy() end
-                            local h = Instance.new("Highlight")
-                            h.FillTransparency, h.OutlineTransparency, h.DepthMode, h.Parent = 0.5, 1, Enum.HighlightDepthMode.AlwaysOnTop, p
-                            _CHMC[p] = h
-                        end
-                        _CHMC[p].Enabled, _CHMC[p].FillColor = true, _S2._C
-                    elseif _CHMC[p] then _CHMC[p].Enabled = false end
-                    
-                    local sPos, onS = _CA:WorldToViewportPoint(root.Position)
-                    if onS then
-                        if not _ESTO[p] then
-                            _ESTO[p] = {
-                                Box = _CD("Square", {Thickness = 1, Filled = false, ZIndex = 2}),
-                                Fill = _CD("Square", {Thickness = 0, Filled = true, Transparency = 0.3, ZIndex = 1}),
-                                Tag = _CD("Text", {Size = 13, Center = true, Font = 2, Outline = false, ZIndex = 3}),
-                                Dist = _CD("Text", {Size = 13, Center = true, Font = 2, Outline = false, ZIndex = 3})
-                            }
-                        end
-                        local esp = _ESTO[p]
-                        local bSize = 6000/sPos.Z
-                        local bPos = _v2(sPos.X - bSize/2, sPos.Y - bSize/2)
-                        
-                        esp.Box.Visible, esp.Box.Size, esp.Box.Position, esp.Box.Color = _S2._BE, _v2(bSize, bSize), bPos, _S2._C
-                        esp.Fill.Visible, esp.Fill.Size, esp.Fill.Position, esp.Fill.Color = (_S2._BE and _S2._BF), esp.Box.Size, esp.Box.Position, _S2._C
-                        
-                        local tagStr = sleeper and "SLEEPER" or (bot and "BOT" or "PLAYER")
-                        esp.Tag.Visible = _S2._IE
-                        esp.Tag.Text = tagStr
-                        esp.Tag.Color = _S2._C
-                        esp.Tag.Position = _v2(sPos.X, sPos.Y + bSize/2 + 2)
-                        
-                        esp.Dist.Visible = _S2._IE
-                        esp.Dist.Text = _fmt("[%dm]", _floor(dist))
-                        esp.Dist.Color = _S2._C
-                        esp.Dist.Position = _v2(sPos.X, sPos.Y + bSize/2 + 15)
-                    else 
-                        if _ESTO[p] then _REESP(p) end 
-                        if _CHMC[p] then _CHMC[p].Enabled = false end
-                    end
-                else 
-                    if _ESTO[p] then _REESP(p) end 
-                    if _CHMC[p] then _CHMC[p].Enabled = false end
-                end
-            end
-        end
-    else 
-        for p, _ in pairs(_ESTO) do _REESP(p) end 
-        for p, h in pairs(_CHMC) do h.Enabled = false end 
-    end
-
-    for i = #_R_CACH, 1, -1 do
-        local res = _R_CACH[i]
-        if not res.part or not res.part.Parent or not res.model or not res.model.Parent then
-            _RERESP(res.part)
-            _rem(_R_CACH, i)
-        else
-            local enabled = (res.type == "Stone" and _S2._StoneESP) or (res.type == "Iron" and _S2._IronESP) or (res.type == "Nitrate" and _S2._NitrateESP)
-            if enabled then
-                local dist = (cPos - res.part.Position).Magnitude
-                if dist <= 1000 then 
-                    local sPos, onS = _CA:WorldToViewportPoint(res.part.Position)
-                    if onS then
-                        if not _RSTO[res.part] then _RSTO[res.part] = _CD("Text", {Size = 13, Center = true, Font = 2, Color = res.color, Outline = false, ZIndex = 1}) end
-                        _RSTO[res.part].Visible, _RSTO[res.part].Text = true, _fmt("%s [%dm]", res.type, _floor(dist))
-                        _RSTO[res.part].Position = _v2(sPos.X, sPos.Y)
-                        if _S2._OC then
-                            if not _RCHC[res.part] or _RCHC[res.part].Parent ~= res.model then
-                                if _RCHC[res.part] then _RCHC[res.part]:Destroy() end
-                                local h = Instance.new("Highlight")
-                                h.FillTransparency, h.OutlineTransparency, h.DepthMode, h.Parent = 0.5, 1, Enum.HighlightDepthMode.AlwaysOnTop, res.model
-                                _RCHC[res.part] = h
-                            end
-                            _RCHC[res.part].Enabled, _RCHC[res.part].FillColor = true, res.color
-                        elseif _RCHC[res.part] then _RCHC[res.part].Enabled = false end
-                    else 
-                        if _RSTO[res.part] then _RSTO[res.part].Visible = false end 
-                    end
-                else 
-                    if _RSTO[res.part] then _RSTO[res.part].Visible = false end 
-                    if _RCHC[res.part] then _RCHC[res.part].Enabled = false end
-                end
-            else 
-                if _RSTO[res.part] then _RSTO[res.part].Visible = false end 
-                if _RCHC[res.part] then _RCHC[res.part].Enabled = false end
-            end
-        end
-    end
-
-    for i = 1, #_P_CACH do
-        local obj = _P_CACH[i]
-        local part = _GAP(obj)
-        if part then
-            local sleeper, bot = _f2(obj), _f1(obj)
-            local sPos, onS = _CA:WorldToViewportPoint(part.Position)
-            local screenPos = _v2(sPos.X, sPos.Y)
-            local inFOV = onS and (screenPos - mPos).Magnitude < _S1._FS
-            local canExpand = _S1._A and _S1._HA and inFOV and not (_S1._SC and sleeper) and not (_S1._IB and bot)
-            if canExpand and _S1._HWC then canExpand = _f3(part) end
-            if canExpand then
-                if not _OSZ[part] then 
-                    _OSZ[part] = part.Size 
-                    _OCOL[part] = {Color = part.Color, Trans = part.Transparency} 
-                    _OCC[part] = part.CanCollide 
-                end
-                part.Size, part.Transparency, part.Color, part.CanCollide = _v3(_S1._HS, _S1._HS, _S1._HS), _S1._HT, _S1._HC, _S1._HCC
-            elseif _OSZ[part] then
-                part.Size, part.Color, part.Transparency, part.CanCollide = _OSZ[part], _OCOL[part].Color, _OCOL[part].Trans, _OCC[part]
-                _OSZ[part], _OCOL[part], _OCC[part] = nil, nil, nil
-            end
-        end
-    end
-
-    if _S1._A and _UI:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) then
-        local target = nil
-        if _LCKT then
-            local part = _GAP(_LCKT)
-            if _LCKT.Parent and part and (cPos - part.Position).Magnitude <= 1000 then
-                local sPos, onS = _CA:WorldToViewportPoint(part.Position)
-                if onS then
-                    local screenPos = _v2(sPos.X, sPos.Y)
-                    if (screenPos - mPos).Magnitude < _S1._FS * 1.5 then
-                        if not _S1._WC or _f3(part) then 
-                            target = screenPos 
-                        end
-                    else 
-                        _LCKT = nil 
-                    end
-                else 
-                    _LCKT = nil 
-                end
-            else 
-                _LCKT = nil 
-            end
-        end
-        if not _LCKT then
-            local minMag = _S1._FS
-            for i = 1, #_P_CACH do
-                local p = _P_CACH[i]
-                local part = _GAP(p)
-                if part and (cPos - part.Position).Magnitude <= 1000 and not (_S1._SC and _f2(p)) and not (_S1._IB and _f1(p)) then
-                    local sPos, onS = _CA:WorldToViewportPoint(part.Position)
-                    if onS then
-                        local screenPos = _v2(sPos.X, sPos.Y)
-                        local mag = (screenPos - mPos).Magnitude
-                        if mag < minMag then 
-                            if not _S1._WC or _f3(part) then 
-                                minMag, target, _LCKT = mag, screenPos, p 
-                            end
-                        end
-                    end
-                end
-            end
-        end
-        if target then 
-            _mmr((target.X - mPos.X) / _S1._SM, (target.Y - mPos.Y) / _S1._SM) 
-        end
-    else 
-        _LCKT = nil 
-    end
-end))
-
-_UI.InputBegan:Connect(LPH_NO_VIRTUALIZE(function(input, processed)
-    if input.KeyCode == Enum.KeyCode.RightShift then 
-        window.key = Enum.KeyCode.RightShift
-        return 
-    end
+UserInputService.InputBegan:Connect(LPH_NO_VIRTUALIZE(function(input, processed)
     if not processed then
-        if input.KeyCode == _S1._B then 
-            aimbotToggle:set(not _S1._A)
-        elseif input.KeyCode == _S2._HB_B then 
-            hitboxToggle:set(not _S1._HA)
-        elseif input.KeyCode == _S2._FBB then 
-            fullbrightToggle:set(not _S2._FB)
-        elseif input.KeyCode == _S2._B then 
-            playerEspToggle:set(not _S2._PE)
+        if hitboxBindKey and input.KeyCode == hitboxBindKey then
+            hitboxToggle:set(not hitboxToggle:get())
+        end
+        if espBindKey and input.KeyCode == espBindKey then
+            playerEspToggle:set(not playerEspToggle:get())
+        end
+        if fullbrightBindKey and input.KeyCode == fullbrightBindKey then
+            fullbrightToggle:set(not fullbrightToggle:get())
         end
     end
 end))
+
+local playerCache = {}
+local resourceCache = {}
+local espObjects = {}
+local chamsObjects = {}
+local resourceTexts = {}
+local resourceChams = {}
+
+local function addToPlayerCache(obj)
+    if obj:IsA("Model") then
+        local root = obj:FindFirstChild("HumanoidRootPart") or obj:FindFirstChild("LowerTorso")
+        if root and obj.Name ~= LocalPlayer.Name then 
+            table.insert(playerCache, obj) 
+        end
+    end
+end
+
+local function addToResourceCache(obj)
+    if obj:IsA("Model") then
+        local mesh = obj:FindFirstChildOfClass("MeshPart")
+        if mesh and (mesh.MeshId == "rbxassetid://12939036056" or mesh.MeshId == "rbxassetid://13425026915") then
+            local isFound = false
+            for _, child in ipairs(obj:GetChildren()) do
+                if child:IsA("BasePart") then
+                    if child.Color == Color3.fromRGB(248, 248, 248) then
+                        table.insert(resourceCache, {
+                            model = obj, 
+                            part = child, 
+                            type = "Nitrate", 
+                            color = Color3.fromRGB(255, 255, 255)
+                        })
+                        isFound = true break
+                    elseif child.Color == Color3.fromRGB(199, 172, 120) or child.Color == Color3.fromRGB(255, 170, 80) then
+                        table.insert(resourceCache, {
+                            model = obj, 
+                            part = child, 
+                            type = "Iron", 
+                            color = Color3.fromRGB(255, 170, 80)
+                        })
+                        isFound = true break
+                    end
+                end
+            end
+            if not isFound then 
+                table.insert(resourceCache, {
+                    model = obj, 
+                    part = mesh, 
+                    type = "Stone", 
+                    color = Color3.fromRGB(200, 200, 200)
+                }) 
+            end
+        end
+    end
+end
+
+local function removeFromPlayerCache(obj)
+    for i = #playerCache, 1, -1 do 
+        if playerCache[i] == obj then 
+            table.remove(playerCache, i) 
+        end 
+    end
+end
+
+local function removeFromResourceCache(obj)
+    for i = #resourceCache, 1, -1 do 
+        if resourceCache[i].model == obj or resourceCache[i].part == obj then 
+            if resourceTexts[resourceCache[i].part] then
+                resourceTexts[resourceCache[i].part].Visible = false
+                resourceTexts[resourceCache[i].part]:Remove()
+                resourceTexts[resourceCache[i].part] = nil
+            end
+            if resourceChams[resourceCache[i].part] then
+                resourceChams[resourceCache[i].part].Enabled = false
+                resourceChams[resourceCache[i].part]:Destroy()
+                resourceChams[resourceCache[i].part] = nil
+            end
+            table.remove(resourceCache, i) 
+        end 
+    end
+end
+
+workspace.ChildAdded:Connect(LPH_NO_VIRTUALIZE(function(obj)
+    addToPlayerCache(obj)
+    addToResourceCache(obj)
+end))
+
+workspace.ChildRemoved:Connect(LPH_NO_VIRTUALIZE(function(obj)
+    removeFromPlayerCache(obj)
+    removeFromResourceCache(obj)
+    if espObjects[obj] then
+        for _, drawing in pairs(espObjects[obj]) do
+            drawing.Visible = false
+            drawing:Remove()
+        end
+        espObjects[obj] = nil
+    end
+    if chamsObjects[obj] then
+        chamsObjects[obj].Enabled = false
+        chamsObjects[obj]:Destroy()
+        chamsObjects[obj] = nil
+    end
+end))
+
+for _, obj in ipairs(workspace:GetChildren()) do
+    addToPlayerCache(obj)
+    addToResourceCache(obj)
+end
+
+RunService.RenderStepped:Connect(LPH_JIT_MAX(LPH_NO_VIRTUALIZE(function()
+    updateFullbright()
+    
+    local cameraPos = Camera.CFrame.Position
+    
+    if ESP_DATA.playerEnabled then
+        for _, player in ipairs(playerCache) do
+            local root = player:FindFirstChild("LowerTorso") or player:FindFirstChild("HumanoidRootPart")
+            if root then
+                local sleeper = isSleeper(player)
+                local bot = isBot(player)
+                local distance = (cameraPos - root.Position).Magnitude
+                
+                if distance <= ESP_DATA.maxDistance and 
+                   not (ESP_DATA.hideSleepers and sleeper) and 
+                   not (ESP_DATA.hideBots and bot) then
+                    
+                    if ESP_DATA.chamsEnabled then
+                        if not chamsObjects[player] or chamsObjects[player].Parent ~= player then
+                            if chamsObjects[player] then 
+                                chamsObjects[player]:Destroy() 
+                            end
+                            local highlight = Instance.new("Highlight")
+                            highlight.FillTransparency = 0.5
+                            highlight.OutlineTransparency = 1
+                            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                            highlight.Parent = player
+                            chamsObjects[player] = highlight
+                        end
+                        chamsObjects[player].Enabled = true
+                        chamsObjects[player].FillColor = ESP_DATA.espColor
+                    elseif chamsObjects[player] then 
+                        chamsObjects[player].Enabled = false 
+                    end
+                    
+                    local screenPos, onScreen = _WorldToViewportPoint(Camera, root.Position)
+                    if onScreen then
+                        if not espObjects[player] then
+                            espObjects[player] = {
+                                box = Drawing.new("Square"),
+                                fill = Drawing.new("Square"),
+                                tag = Drawing.new("Text"),
+                                dist = Drawing.new("Text")
+                            }
+                            espObjects[player].box.Thickness = 1
+                            espObjects[player].box.Filled = false
+                            espObjects[player].box.ZIndex = 2
+                            
+                            espObjects[player].fill.Thickness = 0
+                            espObjects[player].fill.Filled = true
+                            espObjects[player].fill.Transparency = 0.3
+                            espObjects[player].fill.ZIndex = 1
+                            
+                            espObjects[player].tag.Size = 13
+                            espObjects[player].tag.Center = true
+                            espObjects[player].tag.Font = 2
+                            espObjects[player].tag.Outline = false
+                            espObjects[player].tag.ZIndex = 3
+                            
+                            espObjects[player].dist.Size = 13
+                            espObjects[player].dist.Center = true
+                            espObjects[player].dist.Font = 2
+                            espObjects[player].dist.Outline = false
+                            espObjects[player].dist.ZIndex = 3
+                        end
+                        
+                        local esp = espObjects[player]
+                        local boxSize = 6000 / screenPos.Z
+                        local boxPos = Vector2.new(screenPos.X - boxSize/2, screenPos.Y - boxSize/2)
+                        
+                        esp.box.Visible = ESP_DATA.boxEnabled
+                        esp.box.Size = Vector2.new(boxSize, boxSize)
+                        esp.box.Position = boxPos
+                        esp.box.Color = ESP_DATA.espColor
+                        
+                        esp.fill.Visible = ESP_DATA.boxEnabled and ESP_DATA.boxFilled
+                        esp.fill.Size = Vector2.new(boxSize, boxSize)
+                        esp.fill.Position = boxPos
+                        esp.fill.Color = ESP_DATA.espColor
+                        
+                        local tagText = sleeper and "SLEEPER" or (bot and "BOT" or "PLAYER")
+                        esp.tag.Visible = ESP_DATA.infoEnabled
+                        esp.tag.Text = tagText
+                        esp.tag.Color = ESP_DATA.espColor
+                        esp.tag.Position = Vector2.new(screenPos.X, screenPos.Y + boxSize/2 + 2)
+                        
+                        esp.dist.Visible = ESP_DATA.infoEnabled
+                        esp.dist.Text = string.format("[%dm]", math.floor(distance))
+                        esp.dist.Color = ESP_DATA.espColor
+                        esp.dist.Position = Vector2.new(screenPos.X, screenPos.Y + boxSize/2 + 15)
+                    else
+                        if espObjects[player] then
+                            espObjects[player].box.Visible = false
+                            espObjects[player].fill.Visible = false
+                            espObjects[player].tag.Visible = false
+                            espObjects[player].dist.Visible = false
+                        end
+                        if chamsObjects[player] then 
+                            chamsObjects[player].Enabled = false 
+                        end
+                    end
+                else
+                    if espObjects[player] then
+                        espObjects[player].box.Visible = false
+                        espObjects[player].fill.Visible = false
+                        espObjects[player].tag.Visible = false
+                        espObjects[player].dist.Visible = false
+                    end
+                    if chamsObjects[player] then 
+                        chamsObjects[player].Enabled = false 
+                    end
+                end
+            end
+        end
+    else
+        for player, esp in pairs(espObjects) do
+            esp.box.Visible = false
+            esp.fill.Visible = false
+            esp.tag.Visible = false
+            esp.dist.Visible = false
+        end
+        for player, chams in pairs(chamsObjects) do
+            chams.Enabled = false
+        end
+    end
+    
+    for i = #resourceCache, 1, -1 do
+        local resource = resourceCache[i]
+        if not resource.part or not resource.part.Parent or not resource.model or not resource.model.Parent then
+            table.remove(resourceCache, i)
+        else
+            local enabled = (resource.type == "Stone" and ESP_DATA.stoneEnabled) or 
+                           (resource.type == "Iron" and ESP_DATA.ironEnabled) or 
+                           (resource.type == "Nitrate" and ESP_DATA.nitrateEnabled)
+            
+            if enabled then
+                local distance = (cameraPos - resource.part.Position).Magnitude
+                if distance <= ESP_DATA.maxDistance then
+                    local screenPos, onScreen = _WorldToViewportPoint(Camera, resource.part.Position)
+                    if onScreen then
+                        if not resourceTexts[resource.part] then
+                            resourceTexts[resource.part] = Drawing.new("Text")
+                            resourceTexts[resource.part].Size = 13
+                            resourceTexts[resource.part].Center = true
+                            resourceTexts[resource.part].Font = 2
+                            resourceTexts[resource.part].Color = resource.color
+                            resourceTexts[resource.part].Outline = false
+                            resourceTexts[resource.part].ZIndex = 1
+                        end
+                        resourceTexts[resource.part].Visible = true
+                        resourceTexts[resource.part].Text = string.format("%s [%dm]", resource.type, math.floor(distance))
+                        resourceTexts[resource.part].Position = Vector2.new(screenPos.X, screenPos.Y)
+                        
+                        if ESP_DATA.oreChams then
+                            if not resourceChams[resource.part] or resourceChams[resource.part].Parent ~= resource.model then
+                                if resourceChams[resource.part] then 
+                                    resourceChams[resource.part]:Destroy() 
+                                end
+                                local highlight = Instance.new("Highlight")
+                                highlight.FillTransparency = 0.5
+                                highlight.OutlineTransparency = 1
+                                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                                highlight.Parent = resource.model
+                                resourceChams[resource.part] = highlight
+                            end
+                            resourceChams[resource.part].Enabled = true
+                            resourceChams[resource.part].FillColor = resource.color
+                        elseif resourceChams[resource.part] then 
+                            resourceChams[resource.part].Enabled = false 
+                        end
+                    else
+                        if resourceTexts[resource.part] then 
+                            resourceTexts[resource.part].Visible = false 
+                        end
+                        if resourceChams[resource.part] then 
+                            resourceChams[resource.part].Enabled = false 
+                        end
+                    end
+                else
+                    if resourceTexts[resource.part] then 
+                        resourceTexts[resource.part].Visible = false 
+                    end
+                    if resourceChams[resource.part] then 
+                        resourceChams[resource.part].Enabled = false 
+                    end
+                end
+            else
+                if resourceTexts[resource.part] then 
+                    resourceTexts[resource.part].Visible = false 
+                end
+                if resourceChams[resource.part] then 
+                    resourceChams[resource.part].Enabled = false 
+                end
+            end
+        end
+    end
+end)))
