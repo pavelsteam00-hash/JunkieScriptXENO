@@ -18,13 +18,15 @@ local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/bloodball/-back-ups-for-libs/main/Splix"))()
-local window = library:new({textsize = 13.5,font = Enum.Font.RobotoMono,name = "YES",color = Color3.fromRGB(140, 0, 255)})
+local window = library:new({textsize = 13.5,font = Enum.Font.RobotoMono,name = "SILVER PRIVATE - REWORK",color = Color3.fromRGB(140, 0, 255)})
 
 local combat_tab = window:page({name = "COMBAT"})
 local visuals_tab = window:page({name = "VISUALS"})
 
 local hitbox_section = combat_tab:section({name = "HITBOX",side = "left",size = 250})
 local esp_section = visuals_tab:section({name = "PLAYER ESP",side = "left",size = 250})
+local object_esp_section = visuals_tab:section({name = "ORE ESP",side = "right",size = 250})
+local backpack_crates_section = visuals_tab:section({name = "OBJECT ESP",side = "right",size = 300})
 
 local validcharacters = {}
 local hbc, original_size, hbsize = nil, Vector3.new(1, 1, 1), Vector3.new(3, 3, 3)
@@ -42,6 +44,119 @@ local checkBoot = false
 local maxDistance = 1000
 local espColor = Color3.new(1, 1, 1)
 local chamsColor = Color3.new(1, 0, 0)
+
+local objectEspEnabled = false
+local stoneEsp = false
+local oreEsp = false
+local nitrateEsp = false
+local objectMaxDistance = 500
+local objectCache = {}
+local objectEspObjects = {}
+
+local stoneColor = Color3.fromRGB(128, 128, 128)
+local oreColor = Color3.fromRGB(205, 127, 50)
+local nitrateColor = Color3.fromRGB(255, 255, 255)
+
+local backpackEspEnabled = false
+local backpackEspColor = Color3.fromRGB(0, 255, 255)
+local backpackCache = {}
+local backpackEspObjects = {}
+
+local cratesEspEnabled = false
+local crateTotemEsp = false
+local crateSafeEsp = false
+local crateCartonEsp = false
+local crateColaMachineEsp = false
+
+local totemColor = Color3.fromRGB(0, 0, 255)
+local safeColor = Color3.fromRGB(0, 255, 255)
+local cartonColor = Color3.fromRGB(128, 0, 128)
+local colaMachineColor = Color3.fromRGB(128, 128, 0)
+
+local cratesCache = {}
+local cratesEspObjects = {}
+
+local enttiyidentification = {}
+local function setupEntityIdentification()
+    local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
+    for i, v in ReplicatedStorage.Shared.entities:GetChildren() do
+        local model = v:FindFirstChild("Model")
+        if model and model.PrimaryPart then
+            enttiyidentification[v.Name] = {
+                CollisionGroup = model.PrimaryPart.CollisionGroup,
+                Material = model.PrimaryPart.Material,
+                Color = model.PrimaryPart.Color
+            }
+        end
+    end
+end
+
+setupEntityIdentification()
+
+local function identify_model(model)
+    if model.ClassName ~= "Model" then return false, false end
+    
+    local meshPart = model:FindFirstChildOfClass("MeshPart")
+    if meshPart and meshPart.MeshId == "rbxassetid://12939036056" then
+        if #model:GetChildren() == 1 then
+            return "Stone", model:GetChildren()[1]
+        else
+            for _, part in model:GetChildren() do
+                if part.Color == Color3.fromRGB(248, 248, 248) then
+                    return "Nitrate", part
+                elseif part.Color == Color3.fromRGB(199, 172, 120) then
+                    return "Iron", part
+                end
+            end
+        end
+    end
+    
+    if not model.PrimaryPart then return false, false end
+    local primpart = model.PrimaryPart
+    for name, entity in enttiyidentification do
+        if entity.Color == primpart.Color and entity.Material == primpart.Material and entity.CollisionGroup == primpart.CollisionGroup then
+            return name, primpart
+        end
+    end
+    return false, false
+end
+
+local function isTargetBag(model)
+    if (model.Name == "Model" and #model:GetChildren() == 2) then
+        local p1 = model:FindFirstChild("Part")
+        if (p1 and p1:IsA("BasePart")) then
+            local s = p1.Size
+            if (s.Y < 3 and s.X < 3 and s.Z < 3) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+local function isTargetCrate(model)
+    if not model:IsA("Model") then return false, nil end
+    if LocalPlayer.Character and model:IsDescendantOf(LocalPlayer.Character) then return false, nil end
+    
+    if model:FindFirstChild("State") then
+        return true, "Totem"
+    end
+    
+    local children = {}
+    for _, child in pairs(model:GetChildren()) do
+        children[child.Name] = true
+    end
+    
+    if children['Body'] and children['Wheel'] then
+        return true, "Safe"
+    elseif children['box'] and children['trash'] then
+        return true, "Carton"
+    elseif children['Dispenser'] and children['Machine'] then
+        return true, "Cola Machine"
+    end
+    
+    return false, nil
+end
 
 local playerCache = {}
 local espObjects = {}
@@ -93,19 +208,94 @@ local function removeFromPlayerCache(obj)
     end
 end
 
+local function addToObjectCache(obj)
+    if obj:IsA("Model") then
+        local espname, mainpart = identify_model(obj)
+        if espname and (espname == "Stone" or espname == "Iron" or espname == "Nitrate") then
+            table.insert(objectCache, {model = obj, type = espname, part = mainpart})
+        end
+    end
+end
+
+local function removeFromObjectCache(obj)
+    for i = #objectCache, 1, -1 do 
+        if objectCache[i].model == obj then 
+            table.remove(objectCache, i) 
+        end 
+    end
+    if objectEspObjects[obj] then
+        objectEspObjects[obj].Visible = false
+        objectEspObjects[obj]:Remove()
+        objectEspObjects[obj] = nil
+    end
+end
+
+local function addToBackpackCache(obj)
+    if obj:IsA("Model") and isTargetBag(obj) then
+        table.insert(backpackCache, {model = obj, part = obj:FindFirstChild("Part")})
+    end
+end
+
+local function removeFromBackpackCache(obj)
+    for i = #backpackCache, 1, -1 do 
+        if backpackCache[i].model == obj then 
+            table.remove(backpackCache, i) 
+        end 
+    end
+    if backpackEspObjects[obj] then
+        backpackEspObjects[obj].Visible = false
+        backpackEspObjects[obj]:Remove()
+        backpackEspObjects[obj] = nil
+    end
+end
+
+local function addToCratesCache(obj)
+    if obj:IsA("Model") then
+        local isCrate, crateType = isTargetCrate(obj)
+        if isCrate then
+            local primaryPart = obj.PrimaryPart or obj:FindFirstChild("PrimaryPart") or obj:FindFirstChildWhichIsA("BasePart")
+            if primaryPart then
+                table.insert(cratesCache, {model = obj, type = crateType, part = primaryPart})
+            end
+        end
+    end
+end
+
+local function removeFromCratesCache(obj)
+    for i = #cratesCache, 1, -1 do 
+        if cratesCache[i].model == obj then 
+            table.remove(cratesCache, i) 
+        end 
+    end
+    if cratesEspObjects[obj] then
+        cratesEspObjects[obj].Visible = false
+        cratesEspObjects[obj]:Remove()
+        cratesEspObjects[obj] = nil
+    end
+end
+
 for i, v in next, workspace:GetChildren() do 
     addtovc(v) 
-    addToPlayerCache(v) 
+    addToPlayerCache(v)
+    addToObjectCache(v)
+    addToBackpackCache(v)
+    addToCratesCache(v)
 end
 
 workspace.ChildAdded:Connect(function(obj)
     addtovc(obj)
     addToPlayerCache(obj)
+    addToObjectCache(obj)
+    addToBackpackCache(obj)
+    addToCratesCache(obj)
 end)
 
 workspace.ChildRemoved:Connect(function(obj)
     removefromvc(obj)
     removeFromPlayerCache(obj)
+    removeFromObjectCache(obj)
+    removeFromBackpackCache(obj)
+    removeFromCratesCache(obj)
     if espObjects[obj] then
         for _, drawing in pairs(espObjects[obj]) do
             drawing.Visible = false
@@ -247,6 +437,89 @@ esp_section:slider({name = "max distance",def = 1000, max = 1000,min = 100,round
     maxDistance = value
 end})
 
+object_esp_section:toggle({name = "object esp",def = false,callback = function(value)
+    objectEspEnabled = value
+    if not value then
+        for _, drawing in pairs(objectEspObjects) do
+            drawing.Visible = false
+        end
+    end
+end})
+
+object_esp_section:toggle({name = "stone esp",def = false,callback = function(value)
+    stoneEsp = value
+end})
+
+object_esp_section:toggle({name = "ore esp",def = false,callback = function(value)
+    oreEsp = value
+end})
+
+object_esp_section:toggle({name = "nitrate esp",def = false,callback = function(value)
+    nitrateEsp = value
+end})
+
+object_esp_section:slider({name = "max distance",def = 500, max = 1000,min = 50,rounding = true,ticking = false,measuring = "studs",callback = function(value)
+    objectMaxDistance = value
+end})
+
+backpack_crates_section:toggle({name = "backpack esp",def = false,callback = function(value)
+    backpackEspEnabled = value
+    if not value then
+        for _, drawing in pairs(backpackEspObjects) do
+            drawing.Visible = false
+        end
+    end
+end})
+
+backpack_crates_section:colorpicker({name = "backpack color",cpname = nil,def = Color3.fromRGB(0,255,255),callback = function(value)
+    backpackEspColor = value
+end})
+
+backpack_crates_section:toggle({name = "crates esp",def = false,callback = function(value)
+    cratesEspEnabled = value
+    if not value then
+        for _, drawing in pairs(cratesEspObjects) do
+            drawing.Visible = false
+        end
+    end
+end})
+
+backpack_crates_section:toggle({name = "totem",def = false,callback = function(value)
+    crateTotemEsp = value
+end})
+
+backpack_crates_section:colorpicker({name = "totem color",cpname = nil,def = Color3.fromRGB(0,0,255),callback = function(value)
+    totemColor = value
+end})
+
+backpack_crates_section:toggle({name = "safe",def = false,callback = function(value)
+    crateSafeEsp = value
+end})
+
+backpack_crates_section:colorpicker({name = "safe color",cpname = nil,def = Color3.fromRGB(0,255,255),callback = function(value)
+    safeColor = value
+end})
+
+backpack_crates_section:toggle({name = "carton",def = false,callback = function(value)
+    crateCartonEsp = value
+end})
+
+backpack_crates_section:colorpicker({name = "carton color",cpname = nil,def = Color3.fromRGB(128,0,128),callback = function(value)
+    cartonColor = value
+end})
+
+backpack_crates_section:toggle({name = "cola machine",def = false,callback = function(value)
+    crateColaMachineEsp = value
+end})
+
+backpack_crates_section:colorpicker({name = "cola machine color",cpname = nil,def = Color3.fromRGB(128,128,0),callback = function(value)
+    colaMachineColor = value
+end})
+
+backpack_crates_section:slider({name = "max distance",def = 500, max = 1000,min = 50,rounding = true,ticking = false,measuring = "studs",callback = function(value)
+    objectMaxDistance = value
+end})
+
 RunService.RenderStepped:Connect(function()
     if espEnabled then
         local cameraPos = Camera.CFrame.Position
@@ -356,6 +629,180 @@ RunService.RenderStepped:Connect(function()
                     end
                 end
             end
+        end
+    end
+    
+    if objectEspEnabled then
+        local cameraPos = Camera.CFrame.Position
+        for _, objectData in ipairs(objectCache) do
+            local model = objectData.model
+            local objType = objectData.type
+            local part = objectData.part
+            
+            if part then
+                local shouldShow = false
+                if objType == "Stone" and stoneEsp then shouldShow = true end
+                if objType == "Iron" and oreEsp then shouldShow = true end
+                if objType == "Nitrate" and nitrateEsp then shouldShow = true end
+                
+                if shouldShow then
+                    local distance = (cameraPos - part.Position).Magnitude
+                    
+                    if distance <= objectMaxDistance then
+                        local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
+                        if onScreen then
+                            if not objectEspObjects[model] then
+                                objectEspObjects[model] = Drawing.new("Text")
+                                objectEspObjects[model].Size = 12
+                                objectEspObjects[model].Center = true
+                                objectEspObjects[model].Font = 2
+                                objectEspObjects[model].Outline = false
+                                objectEspObjects[model].ZIndex = 3
+                            end
+                            
+                            local textColor
+                            if objType == "Stone" then
+                                textColor = stoneColor
+                            elseif objType == "Iron" then
+                                textColor = oreColor
+                            else
+                                textColor = nitrateColor
+                            end
+                            
+                            objectEspObjects[model].Visible = true
+                            objectEspObjects[model].Color = textColor
+                            objectEspObjects[model].Text = string.format("%s [%dm]", objType, math.floor(distance))
+                            objectEspObjects[model].Position = Vector2.new(screenPos.X, screenPos.Y)
+                        else
+                            if objectEspObjects[model] then
+                                objectEspObjects[model].Visible = false
+                            end
+                        end
+                    else
+                        if objectEspObjects[model] then
+                            objectEspObjects[model].Visible = false
+                        end
+                    end
+                else
+                    if objectEspObjects[model] then
+                        objectEspObjects[model].Visible = false
+                    end
+                end
+            end
+        end
+    else
+        for _, drawing in pairs(objectEspObjects) do
+            drawing.Visible = false
+        end
+    end
+    
+    if backpackEspEnabled then
+        local cameraPos = Camera.CFrame.Position
+        for _, backpackData in ipairs(backpackCache) do
+            local model = backpackData.model
+            local part = backpackData.part
+            
+            if part then
+                local distance = (cameraPos - part.Position).Magnitude
+                
+                if distance <= objectMaxDistance then
+                    local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
+                    if onScreen then
+                        if not backpackEspObjects[model] then
+                            backpackEspObjects[model] = Drawing.new("Text")
+                            backpackEspObjects[model].Size = 12
+                            backpackEspObjects[model].Center = true
+                            backpackEspObjects[model].Font = 2
+                            backpackEspObjects[model].Outline = false
+                            backpackEspObjects[model].ZIndex = 3
+                        end
+                        
+                        backpackEspObjects[model].Visible = true
+                        backpackEspObjects[model].Color = backpackEspColor
+                        backpackEspObjects[model].Text = string.format("BACKPACK [%dm]", math.floor(distance))
+                        backpackEspObjects[model].Position = Vector2.new(screenPos.X, screenPos.Y)
+                    else
+                        if backpackEspObjects[model] then
+                            backpackEspObjects[model].Visible = false
+                        end
+                    end
+                else
+                    if backpackEspObjects[model] then
+                        backpackEspObjects[model].Visible = false
+                    end
+                end
+            end
+        end
+    else
+        for _, drawing in pairs(backpackEspObjects) do
+            drawing.Visible = false
+        end
+    end
+    
+    if cratesEspEnabled then
+        local cameraPos = Camera.CFrame.Position
+        for _, crateData in ipairs(cratesCache) do
+            local model = crateData.model
+            local crateType = crateData.type
+            local part = crateData.part
+            
+            if part then
+                local shouldShow = false
+                local textColor
+                
+                if crateType == "Totem" and crateTotemEsp then
+                    shouldShow = true
+                    textColor = totemColor
+                elseif crateType == "Safe" and crateSafeEsp then
+                    shouldShow = true
+                    textColor = safeColor
+                elseif crateType == "Carton" and crateCartonEsp then
+                    shouldShow = true
+                    textColor = cartonColor
+                elseif crateType == "Cola Machine" and crateColaMachineEsp then
+                    shouldShow = true
+                    textColor = colaMachineColor
+                end
+                
+                if shouldShow then
+                    local distance = (cameraPos - part.Position).Magnitude
+                    
+                    if distance <= objectMaxDistance then
+                        local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
+                        if onScreen then
+                            if not cratesEspObjects[model] then
+                                cratesEspObjects[model] = Drawing.new("Text")
+                                cratesEspObjects[model].Size = 12
+                                cratesEspObjects[model].Center = true
+                                cratesEspObjects[model].Font = 2
+                                cratesEspObjects[model].Outline = false
+                                cratesEspObjects[model].ZIndex = 3
+                            end
+                            
+                            cratesEspObjects[model].Visible = true
+                            cratesEspObjects[model].Color = textColor
+                            cratesEspObjects[model].Text = string.format("%s [%dm]", crateType, math.floor(distance))
+                            cratesEspObjects[model].Position = Vector2.new(screenPos.X, screenPos.Y)
+                        else
+                            if cratesEspObjects[model] then
+                                cratesEspObjects[model].Visible = false
+                            end
+                        end
+                    else
+                        if cratesEspObjects[model] then
+                            cratesEspObjects[model].Visible = false
+                        end
+                    end
+                else
+                    if cratesEspObjects[model] then
+                        cratesEspObjects[model].Visible = false
+                    end
+                end
+            end
+        end
+    else
+        for _, drawing in pairs(cratesEspObjects) do
+            drawing.Visible = false
         end
     end
 end)
